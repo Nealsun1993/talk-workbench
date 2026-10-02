@@ -1,0 +1,24 @@
+{
+  "name": "talk-workbench",
+  "version": "1.0.0",
+  "description": "口播工作台：episode.json 驱动的竖屏讲解视频组件库（示意 App 窗口 + 光标 + 相机 + 承接换页），基于 Remotion",
+  "scripts": {
+    "setup": "node scripts/setup-fonts.cjs",
+    "studio": "remotion studio src/index.tsx",
+    "still": "remotion still src/index.tsx Episode",
+    "render": "remotion render src/index.tsx Episode"
+  },
+  "dependencies": {
+    "@fontsource/jetbrains-mono": "5.2.8",
+    "@phosphor-icons/core": "2.1.1",
+    "@remotion/cli": "4.0.532",
+    "@remotion/motion-blur": "4.0.532",
+    "misans": "5.0.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.532",
+    "roughjs": "4.6.6"
+  },
+  "private": true,
+  "license": "MIT"
+}

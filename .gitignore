@@ -1,0 +1,7 @@
+.DS_Store
+template/node_modules
+template/build/
+template/out/
+template/public/fonts/
+__pycache__/
+*.pyc

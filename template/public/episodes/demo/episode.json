@@ -1,0 +1,241 @@
+{
+ "id": "demo",
+ "title": "口播工作台演示",
+ "duration": 26.474,
+ "audio": "narration.m4a",
+ "envelope": "envelope.json",
+ "voiceStart": 0.05,
+ "app": {
+  "title": "口播工作台"
+ },
+ "backdrop": {
+  "kind": "grid"
+ },
+ "chapters": [
+  {
+   "at": 0,
+   "label": "工作流",
+   "tab": "工作流"
+  },
+  {
+   "at": 9.52,
+   "label": "真实页面",
+   "tab": "真实页面"
+  },
+  {
+   "at": 15.58,
+   "label": "动效",
+   "tab": "动效"
+  }
+ ],
+ "captions": [
+  {
+   "text": "这是口播工作台的演示",
+   "start": 0.0,
+   "end": 1.65
+  },
+  {
+   "text": "说到一个工具",
+   "start": 2.3,
+   "end": 3.05
+  },
+  {
+   "text": "它就被加进清单",
+   "start": 3.4,
+   "end": 4.5
+  },
+  {
+   "text": "文案",
+   "start": 5.0,
+   "end": 5.5
+  },
+  {
+   "text": "配音",
+   "start": 5.64,
+   "end": 6.15
+  },
+  {
+   "text": "画面",
+   "start": 6.4,
+   "end": 6.75
+  },
+  {
+   "text": "再由一个统筹者",
+   "start": 7.3,
+   "end": 8.35
+  },
+  {
+   "text": "把它们连起来",
+   "start": 8.4,
+   "end": 9.45
+  },
+  {
+   "text": "真实页面放进内置浏览器",
+   "start": 9.95,
+   "end": 11.8
+  },
+  {
+   "text": "说到关键句的时候聚光",
+   "start": 11.88,
+   "end": 13.7
+  },
+  {
+   "text": "再把原文抬成卡片",
+   "start": 14.05,
+   "end": 15.5
+  },
+  {
+   "text": "能力和检查项",
+   "start": 16.1,
+   "end": 17.1
+  },
+  {
+   "text": "说到哪项就打开哪项",
+   "start": 17.4,
+   "end": 18.8
+  },
+  {
+   "text": "光标点击",
+   "start": 19.1,
+   "end": 19.85
+  },
+  {
+   "text": "相机跟随",
+   "start": 20.06,
+   "end": 20.85
+  },
+  {
+   "text": "承接换页",
+   "start": 21.0,
+   "end": 21.75
+  },
+  {
+   "text": "运动模糊",
+   "start": 21.92,
+   "end": 22.5
+  },
+  {
+   "text": "四项都打开",
+   "start": 23.1,
+   "end": 23.95
+  },
+  {
+   "text": "这一页就讲完了",
+   "start": 24.3,
+   "end": 25.6
+  }
+ ],
+ "shots": [
+  {
+   "id": "flow",
+   "template": "app.modules",
+   "start": 0,
+   "end": 9.52,
+   "props": {
+    "title": "口播工作流",
+    "sub": "说到哪个，加哪个",
+    "items": [
+     {
+      "name": "文案",
+      "role": "先确认，再往下做",
+      "icon": "file-text",
+      "at": 5.0
+     },
+     {
+      "name": "配音",
+      "role": "真人录音或 TTS",
+      "icon": "microphone",
+      "at": 5.64
+     },
+     {
+      "name": "画面",
+      "role": "跟着配音的时间走",
+      "icon": "film-slate",
+      "at": 6.4
+     }
+    ],
+    "orchestrator": {
+     "name": "统筹者",
+     "role": "把三步连起来",
+     "icon": "terminal-window",
+     "at": 7.8
+    }
+   }
+  },
+  {
+   "id": "page",
+   "template": "app.browser",
+   "start": 9.52,
+   "end": 15.58,
+   "props": {
+    "name": "Remotion",
+    "source": "remotion.dev · 官网实际页面",
+    "url": "https://www.remotion.dev/",
+    "image": "remotion.png",
+    "size": [
+     848,
+     620
+    ],
+    "focus": {
+     "x": 228,
+     "y": 279,
+     "w": 390,
+     "h": 27,
+     "at": 13.22,
+     "text": "Create videos and motion graphics with React.",
+     "label": "官网原文"
+    },
+    "carry": {
+     "anchor": "item:2",
+     "click": true
+    }
+   }
+  },
+  {
+   "id": "motion",
+   "template": "app.toggles",
+   "start": 15.58,
+   "end": 26.474,
+   "props": {
+    "title": "这套画面做了什么",
+    "sub": "说到哪项，打开哪项",
+    "control": "toggle",
+    "items": [
+     {
+      "name": "光标点击",
+      "icon": "cursor-click",
+      "at": 19.1,
+      "desc": "永远落在按钮上"
+     },
+     {
+      "name": "相机跟随",
+      "icon": "video-camera",
+      "at": 20.06,
+      "desc": "说到哪块，推近哪块"
+     },
+     {
+      "name": "承接换页",
+      "icon": "flow-arrow",
+      "at": 21.0,
+      "desc": "上一页的元素长成下一页"
+     },
+     {
+      "name": "运动模糊",
+      "icon": "sparkle",
+      "at": 21.92,
+      "desc": "只加在快速移动的帧上"
+     }
+    ],
+    "toasts": [
+     {
+      "text": "四项都已打开",
+      "at": 23.3
+     }
+    ],
+    "carry": {
+     "anchor": "quote"
+    }
+   }
+  }
+ ]
+}
