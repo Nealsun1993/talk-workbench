@@ -17,6 +17,7 @@ import {Act, Focus, Anchor} from './types';
 import {Easing} from 'remotion';
 import {OPENER, CAST_FLY, castTray, trayRect, openerBefore} from '../kit/cast';
 import {CastTile} from '../templates/Opener';
+import {PointerCtx} from './pointer';
 
 const ease = Easing.bezier(0.32, 0.72, 0, 1);
 const E = (t: number, at: number, d: number) => ease(clamp01((t - at) / d));
@@ -132,12 +133,25 @@ const planCursor = (sess: Session, ep: Episode): KF[] => {
   }
   return kf;
 };
-const cursorAt = (kf: KF[], t: number) => {
+const cursorAt = (kf: KF[], t: number, polish = false) => {
   let i = kf.findIndex((k) => k.t > t);
   if (i === -1) i = kf.length;
   const a = kf[Math.max(0, i - 1)], b = kf[i];
   let x = a.x, y = a.y;
-  if (b) { const p = E(t, b.t - b.move, b.move); x = lerp(a.x, b.x, p); y = lerp(a.y, b.y, p); }
+  if (b && !polish) { const p = E(t, b.t - b.move, b.move); x = lerp(a.x, b.x, p); y = lerp(a.y, b.y, p); }
+  if (b && polish) {
+    // 打磨模式：点击前提前 0.16 秒到位（留出悬停的时间）；路径带一点向上的弧度；快到时冲过头几像素再收回
+    const dwell = b.click && b.move >= 0.3 ? 0.16 : 0;
+    const raw = clamp01((t - (b.t - b.move)) / (b.move - dwell)), p = ease(raw);
+    x = lerp(a.x, b.x, p); y = lerp(a.y, b.y, p);
+    const dx = b.x - a.x, dy = b.y - a.y, dist = Math.hypot(dx, dy);
+    if (dist > 40) {
+      const bow = Math.sin(Math.PI * p) * Math.min(46, dist * 0.1) * (dx >= 0 ? -1 : 1);
+      x += (-dy / dist) * bow; y += (dx / dist) * bow;
+      const over = Math.sin(Math.PI * clamp01((raw - 0.72) / 0.28)) * Math.min(7, dist * 0.02);
+      x += (dx / dist) * over; y += (dy / dist) * over;
+    }
+  }
   // 拖拽中按住；点击瞬间按下
   const dragging = kf.some((k, j) => k.press && kf[j + 1] && t >= k.t && t < kf[j + 1].t);
   const clicking = kf.some((k) => k.click && t >= k.t && t < k.t + 0.14);
@@ -205,8 +219,10 @@ export const AppStage: React.FC<{t: number; ep: Episode; env: Envelope; sess: Se
   const le = launch ? morphEase(clamp01((t - sess.start - 0.05) / 0.65)) : 1;
   const lr = launch ? lerpRect([launch.from[0] - WIN.x, launch.from[1] - WIN.y, launch.from[2], launch.from[3]], [0, 0, WIN.w, WIN.h], le) : null;
   const exit = t >= sess.end ? flowOut(t, sess.end) : {};
+  const polish = (ep as any).motion?.polish !== false;  // 动效打磨（v5.3 起默认开；写 "motion": {"polish": false} 关掉）
+  // 不做「镜头慢呼吸」：缓慢漂移会被动态自查判为问题（见 scripts/motion_audit.py）。待机靠真实变化填，不靠镜头漂。
   const cam = camAt(sess, t);
-  const cur = cursorAt(planCursor(sess, ep), t);
+  const cur = cursorAt(planCursor(sess, ep), t, polish);
   const appTitle = (ep as any).app?.title ?? '口播工作台';
   return (
     <AbsoluteFill style={{...exit, WebkitMaskImage: `linear-gradient(to bottom, #000 ${VIEW.bottom - 40}px, transparent ${VIEW.bottom}px)`}}>
@@ -218,6 +234,7 @@ export const AppStage: React.FC<{t: number; ep: Episode; env: Envelope; sess: Se
           boxShadow: lr ? 'none' : '0 50px 100px -30px rgba(16,36,58,0.30), 0 0 0 1.5px rgba(16,36,58,0.06)',
           ...(lr ? {clipPath: inset(lr, lerp(launch.r ?? 24, 36, le)), background: 'transparent'} : {opacity: clamp01(open * 1.6), transform: `translateY(${(1 - open) * 60}px) scale(${0.94 + 0.06 * open})`, transformOrigin: '50% 60%'})}}>
           <div style={{position: 'absolute', inset: 0, opacity: lr ? clamp01((le - 0.35) / 0.5) : 1}}>
+          <PointerCtx.Provider value={{polish, x: cur.x, y: cur.y, t}}>
           <Chrome title={appTitle} />
           <Tabs t={t} ep={ep} />
           {/* 页面：有承接时，上一页的元素长成这一页；没有承接时才推入推出 */}
@@ -253,6 +270,7 @@ export const AppStage: React.FC<{t: number; ep: Episode; env: Envelope; sess: Se
               return <div key={s.id} style={{position: 'absolute', inset: 0, ...st}}><tpl.Page t={t} shot={s} ep={ep} env={env} /></div>;
             })}
           </div>
+          </PointerCtx.Provider>
           </div>
         </div>
         {/* 光标（在窗口坐标系里，跟相机一起缩放） */}

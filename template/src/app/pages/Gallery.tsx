@@ -5,9 +5,9 @@
 // 每张都必须带真实性标签。
 // props: {
 //   title, sub,
-//   prompt?: {skill, placeholder}, button?: {text, at},        // 生成用法
+//   prompt?: {skill?, placeholder, type?: {text, at, cps?}}, button?: {text, at},   // 生成用法；type 是把一句话打进提示栏
 //   chips?: string[],                                         // 画廊用法：分类标签
-//   items: [{kind: 'image'|'video'|'flow', src?, poster?, steps?, tag, at?}],
+//   items: [{kind: 'image'|'video'|'flow', src?, poster?, steps?, stepAt?, tag, at?}],   // stepAt：流程每一步亮起的时间
 //   select?: [{index, at}]                                    // 画廊用法：依次选中
 // }
 // layout: 'hero'（v5.1）：一张 16:9 大图 + 缩略图，横版样例用它，写法见 Hero.tsx
@@ -31,16 +31,20 @@ const cardGeom = (n: number) => {
   return Array.from({length: n}, (_, i) => ({x: PAD + i * (w + gap), y: GRID_Y + 20, w, h}));
 };
 
-const Flow: React.FC<{steps: string[]}> = ({steps}) => (
+const Flow: React.FC<{steps: string[]; t: number; stepAt?: number[]}> = ({steps, t, stepAt}) => {
+  const cur = stepAt ? stepAt.filter((x) => t >= x).length - 1 : steps.length - 1;
+  return (
   <div style={{position: 'absolute', inset: 0, background: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 10px', gap: 10}}>
     {steps.map((s, i) => (
       <React.Fragment key={s}>
-        <div style={{background: i === steps.length - 1 ? C.voiceSoft : UI.well, color: i === steps.length - 1 ? C.voice : C.ink, borderRadius: 16, padding: '14px 6px', textAlign: 'center', whiteSpace: 'nowrap', ...T.caption, fontWeight: 600}}>{s}</div>
+        <div style={{background: i === cur ? (stepAt ? C.voice : C.voiceSoft) : UI.well, color: i === cur ? (stepAt ? '#FFFFFF' : C.voice) : C.ink, opacity: i > cur ? 0.35 : 1, borderRadius: 16, padding: '14px 6px', textAlign: 'center', whiteSpace: 'nowrap', ...T.caption, fontWeight: 600,
+          transform: `scale(${stepAt && i === cur ? 0.94 + 0.06 * Math.min(1, springIn(t, stepAt[i])) : 1})`}}>{s}</div>
         {i < steps.length - 1 ? <div style={{display: 'flex', justifyContent: 'center'}}><Icon name="arrow-down" size={30} color={C.secondary} /></div> : null}
       </React.Fragment>
     ))}
   </div>
-);
+  );
+};
 
 const Page: React.FC<PageProps> = (props) => {
   if (props.shot.props.layout === 'hero') return <HeroPage {...props} />;
@@ -54,8 +58,10 @@ const Page: React.FC<PageProps> = (props) => {
       <PageTitle t={t} at={shot.start + 0.1} title={p.title} sub={p.sub} />
       {p.prompt ? (
         <div style={{position: 'absolute', left: PAD, top: BAR_Y, width: CW, height: 96, borderRadius: 26, background: UI.well, display: 'flex', alignItems: 'center', gap: 16, padding: '0 14px 0 20px', boxSizing: 'border-box', ...rise(t, shot.start + 0.18)}}>
-          <Tag tone="voice">{p.prompt.skill}</Tag>
-          <div style={{...T.caption, color: '#9AA7B8', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden'}}>{p.prompt.placeholder}</div>
+          {p.prompt.skill ? <Tag tone="voice">{p.prompt.skill}</Tag> : null}
+          {p.prompt.type && t >= p.prompt.type.at
+            ? <div style={{...T.caption, color: C.ink, fontWeight: 600, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden'}}>{[...p.prompt.type.text].slice(0, Math.floor((t - p.prompt.type.at) / (p.prompt.type.cps ?? 0.12)) + 1).join('')}</div>
+            : <div style={{...T.caption, color: '#9AA7B8', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden'}}>{p.prompt.placeholder}</div>}
         </div>
       ) : null}
       {p.button ? <Button x={PAD + CW - 14 - 200} y={BAR_Y + 12} w={200} label={p.button.text} primary icon="sparkle" press={pressScale(t, p.button.at)} style={rise(t, shot.start + 0.22)} /> : null}
@@ -79,7 +85,7 @@ const Page: React.FC<PageProps> = (props) => {
           <div key={i} style={{position: 'absolute', left: cg.x, top: cg.y, width: cg.w, ...rise(t, at, 28), opacity: (rise(t, at, 28).opacity as number) * (1 - 0.55 * dim)}}>
             <div style={{position: 'relative', width: cg.w, height: cg.h, borderRadius: 26, overflow: 'hidden', background: '#fff',
               boxShadow: `0 0 0 ${2 + 4 * chosen}px ${mix(UI.line, C.voice, chosen)}, 0 12px 28px rgba(16,36,58,0.10)`}}>
-              {it.kind === 'flow' ? <Flow steps={it.steps} /> : it.kind === 'video' ? (
+              {it.kind === 'flow' ? <Flow steps={it.steps} t={t} stepAt={it.stepAt} /> : it.kind === 'video' ? (
                 t < playFrom && it.poster ? <Img src={staticFile(assetPath(ep, it.poster))} style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : (
                   <Sequence from={Math.round(playFrom * 30)} layout="none"><Media src={assetPath(ep, it.src)} kind="video" fit="cover" /></Sequence>
                 )

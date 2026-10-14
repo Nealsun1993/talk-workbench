@@ -20,6 +20,7 @@ import {AppTemplate, PageProps} from '../types';
 import {PAD, CW} from '../geom';
 import {castLandAt} from '../../kit/cast';
 import {Button, PageTitle, Status, UI, pressScale} from '../ui';
+import {usePointer, hoverOf} from '../pointer';
 
 const ROW0 = 450, ADD: [number, number] = [PAD + CW - 170, 356];
 /** 行几何：普通 / dense（合集总览，最多 6 行） */
@@ -37,6 +38,7 @@ const Page: React.FC<PageProps> = ({t, shot, ep}) => {
   const connectAt = o ? o.at + 0.5 : Infinity;
   const addClicks = items.map((it: any) => it.at - 0.12);
   const lastClick = addClicks.filter((c: number) => t >= c).pop();
+  const ptr = usePointer();
   return (
     <>
       <PageTitle t={t} at={shot.start + 0.1} title={title} sub={sub} />
@@ -53,10 +55,11 @@ const Page: React.FC<PageProps> = ({t, shot, ep}) => {
         const flash = pre ? snap(t, it.at) * (1 - snap(t, i + 1 < n ? items[i + 1].at : o ? o.at : it.at + 1.5))
           : t >= it.at ? Math.max(0, 1 - (t - it.at) / 0.9) : 0;
         const conn = o ? snap(t, connectAt + 0.25 + i * 0.14) : 0;                                   // 状态：快速到位
+        const hv = on >= 0.99 ? hoverOf(ptr, PAD, ROW0 + i * ROW_H, CW, gm.box, 16) : 0;             // 打磨模式：光标停在这一行时变色并抬起
         return (
           <div key={it.name} style={{position: 'absolute', left: PAD, top: ROW0 + i * ROW_H, width: CW, height: gm.box, borderRadius: 28,
-            background: mix(UI.well, C.voiceSoft, flash), boxShadow: pre ? `inset 0 0 0 ${3 * flash}px ${C.voice}` : undefined, display: 'flex', alignItems: 'center', gap: 24, padding: '0 24px', boxSizing: 'border-box',
-            opacity: Math.min(1, on * 1.6), transform: `translateY(${(1 - Math.min(1, on)) * -24}px) scale(${0.96 + 0.04 * on})`}}>
+            background: mix(mix(UI.well, '#E8EDF5', hv), C.voiceSoft, flash), boxShadow: pre ? `inset 0 0 0 ${3 * flash}px ${C.voice}` : hv > 0 ? `0 ${8 * hv}px ${20 * hv}px rgba(16,36,58,${0.1 * hv})` : undefined, display: 'flex', alignItems: 'center', gap: 24, padding: '0 24px', boxSizing: 'border-box',
+            opacity: Math.min(1, on * 1.6), transform: `translateY(${(1 - Math.min(1, on)) * -24 - 3 * hv}px) scale(${0.96 + 0.04 * on})`}}>
             <div style={{opacity: landed('logo:' + i)}}>{it.logo ? <Tile size={LOGO} src={assetPath(ep, it.logo)} pad={it.pad ?? 0.14} /> : <Tile size={LOGO} icon={it.icon} bg={tileBg(it.bg)} tint={tileTint(it.tint)} />}</div>
             <div style={{flex: 1}}>
               <div style={{...T.body, fontSize: gm.name, fontWeight: 600, color: C.ink, lineHeight: 1.15}}>{it.name}</div>

@@ -1,3 +1,5 @@
+> v1.1 默认方案 D。新增 `orb`、`scene` 的字段和整期编排见 [scheme-d.md](scheme-d.md)；下表仍为兼容的工作台模板。
+
 # 页面模板
 
 连续的 `app.*` 镜头组成一次会话：窗口打开后常驻，页面在窗口里切换。
@@ -204,3 +206,7 @@ hero 版式的 `kind` 还支持 `spread`（几张竖图并排，写 `srcs`）、
 | `shots` | 镜头列表 |
 | `renderUntil` | 可选，只渲染到这一秒（出样片用） |
 | `motionBlur` | 可选，`false` 关闭运动模糊 |
+
+## 画廊新增字段
+
+`app.gallery` 支持 `prompt.type: {text, at, cps}`，将文字随时间输入提示栏；`cps` 为每字间隔秒数。流程图 item 支持 `stepAt: [整期秒数…]`，逐步点亮 `steps`；数量应一致。省略这些字段时保留原行为。
