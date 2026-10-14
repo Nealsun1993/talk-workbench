@@ -13,7 +13,7 @@
  },
  "chapters": [
   {
-   "at": 0,
+   "at": 2.3,
    "label": "工作流",
    "tab": "工作流"
   },
@@ -24,8 +24,7 @@
   },
   {
    "at": 15.58,
-   "label": "动效",
-   "tab": "动效"
+   "label": "动效"
   }
  ],
  "captions": [
@@ -127,9 +126,43 @@
  ],
  "shots": [
   {
+   "id": "outline",
+   "template": "orb",
+   "start": 0,
+   "end": 2.3,
+   "props": {
+    "kicker": "talk-workbench 演示",
+    "title": "三个部分",
+    "outline": "三个部分",
+    "nodes": [
+     {
+      "label": "工作流",
+      "at": 0.25
+     },
+     {
+      "label": "真实页面",
+      "at": 0.7
+     },
+     {
+      "label": "动效",
+      "at": 1.15
+     }
+    ],
+    "exit": {
+     "at": 1.8,
+     "rect": [
+      120,
+      520,
+      840,
+      900
+     ]
+    }
+   }
+  },
+  {
    "id": "flow",
    "template": "app.modules",
-   "start": 0,
+   "start": 2.3,
    "end": 9.52,
    "props": {
     "title": "口播工作流",
@@ -159,6 +192,15 @@
      "role": "把三步连起来",
      "icon": "terminal-window",
      "at": 7.8
+    },
+    "launch": {
+     "from": [
+      120,
+      520,
+      840,
+      900
+     ],
+     "r": 36
     }
    }
   },
@@ -193,48 +235,89 @@
   },
   {
    "id": "motion",
-   "template": "app.toggles",
+   "template": "scene",
    "start": 15.58,
    "end": 26.474,
    "props": {
-    "title": "这套画面做了什么",
-    "sub": "说到哪项，打开哪项",
-    "control": "toggle",
-    "items": [
+    "pieces": [
      {
-      "name": "光标点击",
-      "icon": "cursor-click",
-      "at": 19.1,
-      "desc": "永远落在按钮上"
+      "kind": "text",
+      "text": "能力和检查项",
+      "at": 15.95,
+      "y": 560,
+      "size": 104,
+      "mark": {
+       "word": "检查项",
+       "at": 16.6
+      },
+      "out": 22.75
      },
      {
-      "name": "相机跟随",
-      "icon": "video-camera",
-      "at": 20.06,
-      "desc": "说到哪块，推近哪块"
+      "kind": "toggles",
+      "at": 17.45,
+      "y": 860,
+      "items": [
+       {
+        "label": "光标点击",
+        "type": "toggle",
+        "on": false,
+        "flipAt": 19.15,
+        "emphAt": 19.27
+       },
+       {
+        "label": "相机跟随",
+        "type": "toggle",
+        "on": false,
+        "flipAt": 20.1,
+        "emphAt": 20.22
+       }
+      ]
      },
      {
-      "name": "承接换页",
-      "icon": "flow-arrow",
-      "at": 21.0,
-      "desc": "上一页的元素长成下一页"
+      "kind": "toggles",
+      "at": 17.75,
+      "y": 1150,
+      "items": [
+       {
+        "label": "承接换页",
+        "type": "toggle",
+        "on": false,
+        "flipAt": 21.05,
+        "emphAt": 21.17
+       },
+       {
+        "label": "运动模糊",
+        "type": "toggle",
+        "on": false,
+        "flipAt": 21.95,
+        "emphAt": 22.07
+       }
+      ]
      },
      {
-      "name": "运动模糊",
-      "icon": "sparkle",
-      "at": 21.92,
-      "desc": "只加在快速移动的帧上"
+      "kind": "text",
+      "text": "四项都打开",
+      "at": 23.05,
+      "y": 560,
+      "size": 104,
+      "mark": {
+       "word": "都打开",
+       "at": 23.55
+      },
+      "out": 24.05
+     },
+     {
+      "kind": "text",
+      "text": "这一页就讲完了",
+      "at": 24.3,
+      "y": 560,
+      "size": 96,
+      "mark": {
+       "word": "讲完了",
+       "at": 24.95
+      }
      }
-    ],
-    "toasts": [
-     {
-      "text": "四项都已打开",
-      "at": 23.3
-     }
-    ],
-    "carry": {
-     "anchor": "quote"
-    }
+    ]
    }
   }
  ]
