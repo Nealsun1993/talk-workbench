@@ -49,7 +49,7 @@ export const push = (t: number, start: number, end: number, amount = 0.05) => 1 
 
 /** 颜色插值 */
 export const mix = (a: string, b: string, p: number) => {
-  const h = (s: string) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16));
+  const h = (s: string) => (s.startsWith('rgb') ? s.match(/\d+/g)!.slice(0, 3).map(Number) : [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16)));
   const x = h(a), y = h(b);
   return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * p)).join(',')})`;
 };
