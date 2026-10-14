@@ -5,6 +5,7 @@ import {Icon} from '../kit/components';
 import {mix, rise, smooth, clamp01, springIn} from '../kit/motion';
 import {textWidth} from '../kit/components';
 import {PAD, CW, WIN} from './geom';
+import {usePointer, hoverOf} from './pointer';
 
 export const UI = {
   well: '#F4F6FA',      // 列表底
@@ -23,18 +24,32 @@ export const PageTitle: React.FC<{t: number; at: number; title: string; sub?: st
   </>
 );
 
-export const Button: React.FC<{x: number; y: number; w: number; h?: number; label: React.ReactNode; primary?: boolean; icon?: string; press?: number; style?: React.CSSProperties}> = ({x, y, w, h = 72, label, primary, icon, press = 1, style}) => (
-  <div style={{position: 'absolute', left: x, top: y, width: w, height: h, borderRadius: 20, background: primary ? C.voice : UI.track, color: primary ? '#fff' : C.ink,
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, ...T.caption, fontSize: 34, fontWeight: 600, transform: `scale(${press})`,
-    boxShadow: primary ? '0 6px 16px rgba(40,91,240,0.28)' : 'none', ...style}}>
-    {icon ? <Icon name={icon} size={36} color={primary ? '#fff' : C.ink} /> : null}
-    {label}
-  </div>
-);
+export const Button: React.FC<{x: number; y: number; w: number; h?: number; label: React.ReactNode; primary?: boolean; icon?: string; press?: number; style?: React.CSSProperties}> = ({x, y, w, h = 72, label, primary, icon, press = 1, style}) => {
+  const ptr = usePointer();
+  // 打磨模式：光标靠近时变亮并抬起 3px；主按钮在等待点击时阴影缓慢呼吸
+  const hv = hoverOf(ptr, x, y, w, h), pulse = ptr.polish && primary ? 0.5 + 0.5 * Math.sin(ptr.t * 2.6) : 0;
+  const polished: React.CSSProperties = ptr.polish ? {
+    ...style,
+    background: primary ? mix(C.voice, '#5B86FF', hv) : mix(UI.track, '#D9E1EE', hv),
+    transform: `${(style?.transform as string) ?? ''} translateY(${-3 * hv}px) scale(${press * (1 + 0.025 * hv)})`,
+    boxShadow: primary ? `0 0 0 ${4 * hv}px rgba(40,91,240,${0.2 * hv}), 0 ${6 + 6 * hv}px ${16 + 14 * hv + 10 * pulse}px rgba(40,91,240,${0.28 + 0.14 * hv + 0.1 * pulse})`
+      : `0 0 0 ${3 * hv}px rgba(40,91,240,${0.28 * hv}), 0 ${7 * hv}px ${16 * hv}px rgba(16,36,58,${0.14 * hv})`,
+  } : (style ?? {});
+  return (
+    <div style={{position: 'absolute', left: x, top: y, width: w, height: h, borderRadius: 20, background: primary ? C.voice : UI.track, color: primary ? '#fff' : C.ink,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, ...T.caption, fontSize: 34, fontWeight: 600, transform: `scale(${press})`,
+      boxShadow: primary ? '0 6px 16px rgba(40,91,240,0.28)' : 'none', ...polished}}>
+      {icon ? <Icon name={icon} size={36} color={primary ? '#fff' : C.ink} /> : null}
+      {label}
+    </div>
+  );
+};
 
-export const Toggle: React.FC<{on: number; x: number; y: number}> = ({on, x, y}) => (
-  <div style={{position: 'absolute', left: x, top: y, width: 110, height: 64, borderRadius: 32, background: mix(UI.off, C.voice, on)}}>
-    <div style={{position: 'absolute', top: 5, left: 5 + 46 * on, width: 54, height: 54, borderRadius: 27, background: '#fff', boxShadow: '0 2px 6px rgba(16,36,58,0.2)'}} />
+// bloom（0–1，打磨模式）：刚打开的一瞬间，轨道比最终的蓝色更亮并带一圈光，随后落回
+export const Toggle: React.FC<{on: number; x: number; y: number; hover?: number; bloom?: number}> = ({on, x, y, hover = 0, bloom = 0}) => (
+  <div style={{position: 'absolute', left: x, top: y, width: 110, height: 64, borderRadius: 32, background: mix(mix(mix(UI.off, '#C3CCDA', hover), mix(C.voice, '#4F7DFF', hover), on), '#7FA2FF', bloom * 0.7),
+    boxShadow: `0 0 0 ${5 * hover}px rgba(40,91,240,${0.16 * hover}), 0 0 ${26 * bloom}px rgba(40,91,240,${0.55 * bloom})`}}>
+    <div style={{position: 'absolute', top: 5, left: 5 + 46 * on, width: 54, height: 54, borderRadius: 27, background: '#fff', boxShadow: '0 2px 6px rgba(16,36,58,0.2)', transform: `scale(${1 + 0.06 * hover})`}} />
   </div>
 );
 
