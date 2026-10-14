@@ -1,7 +1,7 @@
 {
   "name": "talk-workbench",
-  "version": "1.0.0",
-  "description": "口播工作台：episode.json 驱动的竖屏讲解视频组件库（示意 App 窗口 + 光标 + 相机 + 承接换页），基于 Remotion",
+  "version": "1.1.0",
+  "description": "口播工作台：配音驱动的竖屏讲解视频，场景 + 工作台 + 动效检查，基于 Remotion",
   "scripts": {
     "setup": "node scripts/setup-fonts.cjs",
     "studio": "remotion studio src/index.tsx",
