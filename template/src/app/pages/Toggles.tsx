@@ -14,6 +14,7 @@ import {AppTemplate, PageProps} from '../types';
 import {PAD, CW} from '../geom';
 import {PageTitle, Toast, Toggle, UI, toastRect} from '../ui';
 import {snap} from '../../kit/motion';
+import {usePointer, hoverOf} from '../pointer';
 
 const LIST_Y = 372, ROW = 140, TX = PAD + CW - 40 - 110;
 
@@ -22,16 +23,20 @@ const Page: React.FC<PageProps> = ({t, shot}) => {
   const toasts: any[] = shot.props.toasts ?? (shot.props.toast ? [shot.props.toast] : []);
   const active = toasts.filter((x) => t >= x.at).pop();
   const check = shot.props.control === 'check';
+  const ptr = usePointer();
   return (
     <>
       <PageTitle t={t} at={shot.start + 0.1} title={title} sub={sub} />
       <div style={{position: 'absolute', left: PAD, top: LIST_Y, width: CW, height: items.length * ROW, borderRadius: 28, background: UI.well, ...rise(t, shot.start + 0.18)}}>
         {items.map((it: any, i: number) => {
           const on = snap(t, it.at); // 开关 / 勾选：快速到位
+          const bloom = ptr.polish && t >= it.at ? Math.max(0, 1 - (t - it.at) / 0.7) : 0;           // 打磨模式：刚打开时的颜色余韵
+          const hvRow = hoverOf(ptr, PAD, LIST_Y + i * ROW, CW, ROW, 12), hvSw = hoverOf(ptr, PAD + CW - 40 - 120, LIST_Y + i * ROW + (ROW - 84) / 2, 130, 84);
           return (
-            <div key={it.name} style={{position: 'absolute', left: 0, top: i * ROW, width: CW, height: ROW, borderTop: i ? `2px solid ${UI.line}` : 'none'}}>
+            <div key={it.name} style={{position: 'absolute', left: 0, top: i * ROW, width: CW, height: ROW, borderTop: i ? `2px solid ${UI.line}` : 'none', background: hvRow > 0 || bloom > 0 ? `rgba(40,91,240,${Math.max(0.045 * hvRow, 0.11 * bloom)})` : undefined,
+              borderRadius: i === 0 ? '28px 28px 0 0' : i === items.length - 1 ? '0 0 28px 28px' : 0}}>
               <div style={{position: 'absolute', left: 32, top: 0, height: ROW, display: 'flex', alignItems: 'center', gap: 24}}>
-                <Icon name={it.icon} size={50} color={mix('#9AA7B8', C.ink, on)} />
+                <Icon name={it.icon} size={50} color={mix(mix('#9AA7B8', C.ink, on), C.voice, bloom)} />
                 <div>
                   <div style={{...T.body, fontSize: 44, fontWeight: 600, color: mix(C.secondary, C.ink, on), lineHeight: 1.15}}>{it.name}</div>
                   {it.desc ? <div style={{...T.caption, color: C.secondary}}>{it.desc}</div> : null}
@@ -42,7 +47,7 @@ const Page: React.FC<PageProps> = ({t, shot}) => {
                   boxShadow: `inset 0 0 0 ${4 * (1 - on)}px ${UI.off}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: `scale(${0.9 + 0.1 * on})`}}>
                   <Icon name="check" size={38} color="#fff" style={{opacity: on}} />
                 </div>
-              ) : <Toggle on={on} x={CW - 40 - 110} y={(ROW - 64) / 2} />}
+              ) : <Toggle on={on} x={CW - 40 - 110} y={(ROW - 64) / 2} hover={hvSw} bloom={bloom} />}
             </div>
           );
         })}
