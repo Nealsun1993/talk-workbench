@@ -1,9 +1,12 @@
 # 口播工作台 talk-workbench
 
-把一条讲解配音，做成「产品演示」式的竖屏讲解视频。
+把确认好的讲解配音做成「场景 + 工作台」交替的竖屏视频。
 
-画面里是一个常驻的示意 App 窗口。配音说到哪，光标就点到哪：加一个模块、打开一个开关、把文件拖进来。
-相机跟着推近正在讲的地方，换页时上一页的元素直接长成下一页。
+**v1.1 更新依据：作者在 Obsidian 中于 2026-10-13 确认的方案 D。**
+讲是什么、为什么和结论时用概念场景；演示操作时进入示意工作台，光标与相机跟随真实配音。
+本版补入大纲球、概念场景、按钮悬停与弧线光标、三道检查，以及从文案到交付的工作流说明。
+
+以下联系表与成片来自 v1.0，展示工作台模式，不代表新版方案 D 的整片演示。
 
 ![示例联系表](assets/demo-contact.jpg)
 
@@ -15,14 +18,13 @@
 - 一个 **Remotion 组件库**（`template/`）：不用 AI 也能直接用，一期视频就是一个 `episode.json`。
 - 一套**视觉和动效规范**（`references/`）：颜色、字号、光标、相机、承接、验收清单。
 
-适合：AI 工具讲解、工作流介绍、操作步骤、Skill 合集这类「有东西可演示」的口播。
-不适合：纯观点、情绪向的内容。
+适合：AI 工具介绍、工作流讲解、操作步骤、Skill 合集及其中的观点和结论。真人原片的修字删词先由独立剪辑工具完成。
 
 ## 它不做什么
 
 - **不生成配音。** 配音是输入，真人录音或任何 TTS 都可以。
 - **只有竖屏**（1080×1920，30fps）。横屏不在这一版范围内。
-- **不含开场和结尾的角色素材。** 代码里带着 `opener` / `host` / `outro` 模板，要用得自备角色图或头像。
+- **不含开场和结尾的角色素材。** `orb` / `opener` / `host` / `outro` 如需角色或头像，由使用者自备；无角色可直接用大纲或概念场景。
 
 ## 三步跑起来
 
@@ -59,6 +61,8 @@ python3 scripts/from_audio.py 我的配音.wav my-episode
 
 | 这一段在讲 | 用 |
 |---|---|
+| 开场大纲（角色可选） | `orb` |
+| 概念、观点、结论 | `scene` |
 | 用到哪几样东西 / 有哪几步 | `app.modules` |
 | 一个 GitHub 仓库、官网、文档 | `app.browser` |
 | 几项能力、检查项 | `app.toggles` |
@@ -77,7 +81,18 @@ python3 scripts/from_audio.py 我的配音.wav my-episode
 
 **4. 出联系表检查，再渲染**
 
-按 [references/checklist.md](references/checklist.md) 过一遍。
+先按 [方案 D](references/scheme-d.md) 写镜头变化与交接表，再按 [验收清单](references/checklist.md) 检查。
+
+```bash
+python3 scripts/lint_episode.py my-episode
+# 完成实际渲染后：
+python3 scripts/motion_audit.py out/my-episode.mp4 --episode my-episode --json out/my-episode-motion.json
+python3 scripts/seam_sheet.py out/my-episode.mp4 my-episode
+```
+
+三道检查分别查看配置、成片动态和接缝附近抽样帧；不是“一键判断视频合格”。逐条核查异常，人工连续试听和手机裁切仍需完成。
+
+从文案和声音开始的完整分工见 [工作流说明](references/workflow.md)。VoxCPM、video-talkcraft、Omni 是按需外部环节，本仓库不内置模型、账号或生成 API。
 
 ## 这套画面的几条规矩
 
@@ -85,13 +100,17 @@ python3 scripts/from_audio.py 我的配音.wav my-episode
 |---|---|
 | **示意界面** | 窗口标题栏常驻「示意界面」。它是讲解用的示意 App，不冒充任何真实软件 |
 | **真实性标签** | 真实页面标「xxx 实际页面」，原文照抄；样图标「作者示例」。没有实测，不演「测试通过」 |
-| **颜色** | 蓝色只表示「当前 / 正在操作的」，橙色只表示问题和行动号召 |
+| **颜色** | 工作台蓝色表示当前操作；场景蓝色作荧光笔、黑色作强调；橙色表示问题或行动号召 |
 | **光标** | 只做和台词对应的动作，动作之间停住 |
 | **相机** | 说到哪推近哪（1.1 到 1.45 倍），讲完拉回 |
-| **承接** | 上一页被点的元素直接长成下一页，每期至少一半的换页这么做 |
+| **承接** | 上一页被点的元素直接长成下一页，工作台内至少一半的换页优先这么做；场景间不自动承接 |
 | **可读性** | 配音念到的字在画面上不小于 32px；截图小字聚光后抬成原文卡片 |
 
-完整规范：[视觉](references/style.md) · [动效](references/motion.md)
+完整规范：[全流程](references/workflow.md) · [方案 D](references/scheme-d.md) · [视觉](references/style.md) · [动效](references/motion.md)
+
+目前 orb / scene 没有自动运动模糊，场景间也不会自动完成对象承接；具体边界见方案 D 说明。
+
+旧工程想保持原光标行为，可在 episode.json 顶层设置 `"motion": {"polish": false}`。已有 `app.*` 和卡片配置继续可用，第三方依赖版本保持不变。
 
 ## 当 skill 用
 
@@ -110,9 +129,10 @@ talk-workbench/
 ├─ SKILL.md              给 agent 读的流程和硬规则
 ├─ references/           视觉规范、动效规范、模板说明、验收清单
 ├─ template/             Remotion 工程
+│  ├─ src/templates/     概念场景、大纲、角色与卡片模板
 │  ├─ src/app/           窗口引擎：标签栏、光标、相机、承接；pages/ 下是 9 个页面模板
 │  ├─ src/kit/           设计 token、背景、字幕、图标
-│  ├─ scripts/           from_audio.py（骨架）、contact.sh（联系表）、icons.cjs（追加图标）
+│  ├─ scripts/           骨架、联系表、配置检查、动态检查、接缝图、图标
 │  └─ public/episodes/demo/   完整示例
 └─ assets/               示例联系表和成片
 ```
@@ -126,7 +146,7 @@ talk-workbench/
 转写没输出句号时，脚本按配音里的停顿切（默认 0.45 秒）。配音很连贯的话，用 `--pause 0.3` 调小。
 
 **光标点歪了？**
-光标位置是模板根据内容自动算的，不用也不能手写坐标。点歪通常是 `at` 时间填错，或者换页写了不存在的锚点。
+工作台光标由模板根据内容计算；点歪先查关键词时间与承接锚点。scene 的 cursor 使用显式坐标，需要对照实际帧确认指尖落点。
 
 **截图里的字太小？**
 不要硬放大。给 `app.browser` 写 `focus.text`，那一句会被抬成一张原文卡片。
