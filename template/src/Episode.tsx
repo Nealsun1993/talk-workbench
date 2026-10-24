@@ -23,13 +23,19 @@ export const Episode: React.FC<EpisodeProps> = ({ep, env, audio = true}) => {
   const dark = prev && darkOf(prev) !== darkOf(cur) ? darkOf(prev) + (darkOf(cur) - darkOf(prev)) * clamp01((t - cur.start) / 0.35) : darkOf(cur);
   // 画面（不含字幕）：快速运动的帧用 180° 快门的运动模糊，其余帧照常
   const picture = <Picture ep={ep} env={env} />;
-  const blur = (ep as any).motionBlur !== false && appMoving(ep, t);
+  const blur = (ep as any).motionBlur !== false && (appMoving(ep, t) || ep.shots.some((s) => t >= s.start && t < s.end && (TEMPLATES[s.template] as any)?.moving?.(s, t)));
   return (
     <>
       <FontGate text={JSON.stringify(ep)} />
       {audio && ep.audio ? <Audio src={staticFile(assetPath(ep, ep.audio))} /> : null}
       {blur ? <CameraMotionBlur shutterAngle={180} samples={6}>{picture}</CameraMotionBlur> : picture}
-      <Subtitle t={t} ep={ep} dark={dark} />
+      {/* 整屏色块章节卡盖住时：字幕改白字；字幕念的就是卡上那几个字时不再重复显示 */}
+      {(() => {
+        const fl = (cur.props?.pieces ?? []).find((d: any) => d.kind === 'flood' && t >= d.at + 0.1 && (d.out == null || t < d.out + 0.1));
+        if (!fl) return <Subtitle t={t} ep={ep} dark={dark} />;
+        const c = ep.captions.find((x) => t >= x.start && t < x.end), card = `${fl.kicker ?? ''}${fl.title}`;
+        return c && card.includes(c.text.replace(/[\s，。、]/g, '')) ? null : <Subtitle t={t} ep={ep} dark={1} />;
+      })()}
     </>
   );
 };
@@ -44,7 +50,7 @@ const Picture: React.FC<{ep: Ep; env: Envelope}> = ({ep, env}) => {
   const cardShots = ep.shots.filter((s) => !s.template.startsWith('app.'));
   const headerEp = {...ep, shots: ep.shots.map((s) => (s.template.startsWith('app.') ? {...s, header: undefined} : s))};
   return (
-    <Canvas dark={dark}>
+    <Canvas dark={dark} bg={(ep as any).canvas}>
       <Backdrop t={t} spec={(ep as any).backdrop} cam={camOf(ep, t)} dark={dark} />
       <Header t={t} ep={headerEp} dark={dark} />
       {cardShots.map((s) => {
