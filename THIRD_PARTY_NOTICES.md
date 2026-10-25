@@ -35,3 +35,17 @@ SOFTWARE.
 - 许可：MIT License，Copyright (c) 2026 FredTalk
 
 没有使用 FredTalk 的组件源码、字体、音效或任何媒体素材。
+
+## huashu-motion / huashu-art-motion
+
+`references/scheme-d.md`「节奏与镜头」一节和大字、包装的若干规则，参考了这两个仓库公开方法文档里的思路（节奏单、段落交界的对比、动镜头前三问、口播包装克制），按竖屏口播重写。砸入参数 1.55 → 0.94 → 1.0 / 0.17 秒取自 huashu-art-motion 的镜头语言说明。
+
+- 仓库：https://github.com/alchaincyf/huashu-motion 、https://github.com/alchaincyf/huashu-art-motion
+- 许可：MIT License
+
+没有使用这两个仓库的源码、字体、配乐或任何媒体素材。
+
+## CreatorMotion inspect-split
+
+`scene` 的放大镜分屏（`split`）参考了 CreatorMotion 的 inspect-split 效果（两张卡、放大镜依次看过、分开露出中间的结果），按竖屏和本仓库的配色规则自行实现，没有使用其源码或素材。
+

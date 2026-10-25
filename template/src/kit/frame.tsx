@@ -29,7 +29,7 @@ export const Header: React.FC<{t: number; ep: Episode; dark: number}> = ({t, ep,
   return (
     <>
       {row('ch', G.headerTop, {...T.caption, fontWeight: 600, color: sec})}
-      {row('title', G.headerTop + 50, {...T.display, color: ink})}
+      {row('title', G.headerTop + 50, {...T.display, color: ink, ...((cur.header as any).size ? {fontSize: (cur.header as any).size, whiteSpace: 'nowrap'} : {})})}   {/* header.size：长标题缩小、不折行 */}
       {row('sub', G.headerTop + 146, {...T.body, color: sec})}
     </>
   );
@@ -75,6 +75,6 @@ export const FontGate: React.FC<{text: string}> = ({text}) => {
   return null;
 };
 
-export const Canvas: React.FC<{dark: number; children: React.ReactNode}> = ({dark, children}) => (
-  <AbsoluteFill style={{background: mix(C.paper, C.navy, dark), fontFamily: FONT, overflow: 'hidden'}}>{children}</AbsoluteFill>
+export const Canvas: React.FC<{dark: number; bg?: string; children: React.ReactNode}> = ({dark, bg, children}) => (   // bg：整期固定底色（如黑底片头）
+  <AbsoluteFill style={{background: bg ?? mix(C.paper, C.navy, dark), fontFamily: FONT, overflow: 'hidden'}}>{children}</AbsoluteFill>
 );

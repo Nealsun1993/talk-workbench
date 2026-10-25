@@ -10,6 +10,7 @@
   ✗ 光标          一个 scene 里光标超过一个
   ✗ 大纲          带角色的开场大纲（orb + host）全片超过一次
   ! 大纲重复      回到大纲（orb + current）超过一次：讲解结构类画面用过一次就换
+  ! 分屏放开场    放大镜分屏（split）出现在第一章：它用在观点讲解，开场留给角色或大纲
   ! 窗口凭空出现  工作台第一镜没有写 launch（没有从上一镜的东西里长出来）
   ! 关键词太长    大字超过 8 个字
   ! 不是原词      大字或被荧光笔扫的词，在这一镜的字幕里找不到
@@ -21,7 +22,7 @@ import json, re, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TIMES = ("at", "flipAt", "emphAt", "typeAt", "sendAt", "out")
+TIMES = ("at", "flipAt", "emphAt", "typeAt", "sendAt", "out", "badAt", "goodAt", "shakeAt", "saveAt", "splitAt", "subAt", "pushAt")
 norm = lambda s: re.sub(r"[\s，。：、“”「」！？；,.:!?·\-—/]", "", s).lower()
 length = lambda s: sum(0.5 if re.match(r"[A-Za-z0-9]", c) else 1 for c in norm(s))
 
@@ -29,6 +30,7 @@ length = lambda s: sum(0.5 if re.match(r"[A-Za-z0-9]", c) else 1 for c in norm(s
 def lint(name):
     ep = json.loads((ROOT / "public/episodes" / name / "episode.json").read_text())
     shots, caps, out = ep["shots"], ep.get("captions", []), []
+    chs = ep.get("chapters", []); opening = chs[1]["at"] if len(chs) > 1 else shots[0]["end"]   # 第一章（开场）结束的时间
     err = lambda sid, msg: out.append(("✗", sid, msg)); warn = lambda sid, msg: out.append(("!", sid, msg))
     said = lambda s: norm("".join(c["text"] for c in caps if c["end"] > s["start"] - 0.5 and c["start"] < s["end"] + 0.5))
     for i, s in enumerate(shots):
@@ -41,16 +43,31 @@ def lint(name):
                     if k in d:
                         acts.append(d[k])
                         if not (s["start"] - 0.01 <= d[k] <= s["end"] + 0.01): err(sid, f'{d["kind"]} 的 {k}={d[k]} 不在本镜头 {s["start"]}–{s["end"]} 之内')
-                for it in d.get("items", []):
+                for it in d.get("items", []) + d.get("rows", []) + d.get("options", []) + d.get("lens", []):
                     acts += [it[k] for k in TIMES if k in it]
+                acts += d.get("pages", [])
                 for k in ("mark", "hero"):
                     if isinstance(d.get(k), dict) and "at" in d[k]:
                         acts.append(d[k]["at"])
                         if not (s["start"] <= d[k]["at"] <= s["end"] + 0.01): err(sid, f'{d["kind"]}.{k}.at={d[k]["at"]} 不在本镜头之内')
+                if d["kind"] == "split":
+                    if s["start"] < opening - 0.01: warn(sid, "放大镜分屏用在了开场：它放在观点讲解段，开场留给角色或大纲")
+                    for c in d["cards"] + [d["result"]] + [c["note"] for c in d["cards"] if c.get("note")]:
+                        w = c.get("title") or c["text"]
+                        if caps and norm(w) not in said(s): warn(sid, f'「{w}」在这一镜的字幕里找不到，关键词应是配音原词')
+                    for x in [c["note"]["at"] for c in d["cards"] if c.get("note")] + [d["result"].get("titleAt")]:
+                        if x is None: continue
+                        acts.append(x)
+                        if not (s["start"] <= x <= s["end"] + 0.01): err(sid, f"split 里的时间 {x} 不在本镜头之内")
                 if d["kind"] == "text":
-                    if length(d["text"]) > 8: warn(sid, f'大字「{d["text"]}」有 {length(d["text"]):g} 个字，超过 8 个')
+                    if length(d["text"]) > 5: warn(sid, f'大字「{d["text"]}」有 {length(d["text"]):g} 个字：默认只留 2–4 个字的核心词，数字和英文按半个字算')
                     word = (d.get("mark") or {}).get("word") or d["text"]
                     if caps and norm(word) not in said(s): warn(sid, f'「{word}」在这一镜的字幕里找不到，关键词应是配音原词')
+                    # 大字照抄字幕：大字几乎就是同时那条字幕，同一句话屏幕上出现两遍
+                    t = norm(d["text"])
+                    for c in caps:
+                        if c["start"] <= d["at"] + 0.3 and c["end"] >= d["at"] and t and t in norm(c["text"]) and len(t) >= 0.7 * len(norm(c["text"])):
+                            warn(sid, f'大字「{d["text"]}」和同时的字幕「{c["text"]}」几乎一样：只留关键词或换成数字、图形，别把字幕再写一遍'); break
             first = min([d["at"] for d in pieces if "at" in d], default=None)
             if prev and first is not None and first < s["start"] + 0.25: err(sid, f'第一个元素 {first} 出得太早，会和上一镜叠在一起；应不早于 {s["start"] + 0.25:.2f}')
             if sum(d["kind"] == "cursor" for d in pieces) > 1: err(sid, "一个 scene 里有多个光标")
